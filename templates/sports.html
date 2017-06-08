@@ -1,0 +1,102 @@
+{% extends "main.html" %}
+{% block content %}
+{% include "header.html" %}
+	<div class="row top-menu">
+		<div class="col-md-10"></div>
+		<div class="col-md-2 text-right">
+					</div>
+	</div>
+	<div class="row divider blue">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner main">
+		<div class="col-md-1"></div>
+		<div class="col-md-11 padding-none">
+			<h1>Sporting Catalog</h1>
+		</div>
+	</div>
+
+<div class = 'flash'>
+		      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+          
+        <ul>
+        {% for message in messages %}
+            <li> <strong> {{ message }} </strong> </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+
+</div>
+	
+	<div class="row padding-top padding-bottom">
+		<div class="col-md-1"></div>
+		<div class="col-md-10 padding-none">
+			<a href="{{url_for('newSport')}}">
+				<button class="btn btn-default" id="new-sport">
+					<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add Sport
+				</button>
+			</a>
+			{% if sport %}
+				<a href="{{url_for('deleteSport', sport_id = sport.id)}}">
+				<button class="btn btn-default" id="delete-sport">
+					<span class="glyphicon glyphicon-minus" aria-hidden="true"></span>Delete Sport
+				</button>
+				</a>
+				<a href="{{url_for('newItem', sport_id = sport.id)}}">
+					<button class="btn btn-default" id="new-sport">
+						<span class="glyphicon glyphicon-plus" aria-hidden="true"></span>Add Item
+					</button>
+				</a>
+			{% endif %}
+		</div>
+		<div class="col-md-1"></div>
+	</div>
+	
+	<div class="row padding-top padding-bottom">
+		<div class="col-md-1"></div>
+		<div class="col-md-4">
+			<h3 class="bg-info">Click any Category <span class="caret"></span></h3>
+			{% for sport in sports %}
+				<a href = "{{url_for('showMenu', sport_id = sport.id)}}">
+					<div class="row">
+						<div class="col-md-1"></div>
+							<div class="col-md-10 sport-list">
+								<h3>{{sport.name}}</h3>
+							</div>
+						<div class="col-md-1"></div>
+					</div>
+				</a>
+			{% endfor %}
+		</div>
+		<div class="col-md-6">
+			{% if sport %}
+			{% if items !=[] %}
+				<h3 class="bg-info">Items for {{sport.name}}</h3>
+				{% for i in items %}
+					<a href = "{{url_for('showDetail', item_id = i.id, sport_id = i.sport_id)}}">
+						<div class="row">
+							<div class="col-md-1"></div>
+							<div class="col-md-10 sport-list">
+								<h3>{{i.name}}</h3>
+							</div>
+							<div class="col-md-1"></div>
+						</div>
+					</a>
+				{% endfor %}
+			{% else %}
+				<div class="text-center msg">
+					<span>Sorry! There are no items for this sport</span>
+				</div>
+			{% endif %}
+			{% else %}
+				<div class="text-center msg">
+					<span class="glyphicon glyphicon-arrow-left"></span>
+					<span>Please Select Sport From left Menu</span>
+				</div>
+			{% endif %}
+		</div>
+		<div class="col-md-1"></div>
+	</div>
+{% endblock %}

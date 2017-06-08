@@ -1,0 +1,10 @@
+{% extends "main.html" %}
+{% block content %}
+<h2 class="text-danger bg-danger padding-top padding-bottom"> {{message}} </h2>
+<div class="error-link padding-top padding-bottom">
+<a href = '{{url_for('showSports')}}'>
+	Return to <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,59 @@
+{% extends "main.html" %}
+{% block content %}
+	<div class="row top-menu">
+	<div class="col-md-6">
+		<a href="{{url_for('showSports')}}">
+			<span class="glyphicon glyphicon-home"></span>Show All Sports Catalog
+		</a>
+	</div>
+	<div class="col-md-6 text-right">
+			<a href="{{url_for('showLogin')}}">
+				<button class="btn btn-default">
+					Login
+				</button>
+			</a>
+	</div>
+	</div>
+	<div class="row divider green">
+		<div class="col-md-12"></div>
+	</div>
+	<div class="row banner menu">
+		<div class="col-md-11 col-md-offset-1 padding-none">
+			<h1>{{ sport.name }}
+			<figure class="creator">
+				<img src={{creator.picture}}>
+				<figcaption>{{creator.name}}</figcaption>
+			</figure>
+			</h1>
+
+		</div>
+	</div>
+	
+
+<div class = 'flash'>
+		      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+          
+        <ul>
+        {% for message in messages %}
+            <li> <strong> {{ message }} </strong> </li>
+        {% endfor %}
+        </ul>
+        {% endif %}
+    {% endwith %}
+</div>
+
+<div>
+	<div class="row">
+		<div class="col-md-1"></div>
+		<div class="col-md-10">
+			<h2>Name: <small>{{item.name}}</small></h2>
+			<h2>Price: <small>{{item.price}}</small></h2>
+			<h2>Category: <small>{{item.category}}</small></h2>
+			<h2>Description: <small>{{item.description}}</small></h2> 
+		</div>
+		<div class="col-md-1"></div>
+	</div>
+</div>
+
+{% endblock %}
