@@ -4,6 +4,10 @@ from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Sport, SportItem, User
 from flask import session as login_session
+from functools import wraps
+from flask_wtf import FlaskForm
+from wtforms import SubmitField, TextField
+from wtforms import validators, ValidationError
 import random
 import string
 
@@ -30,6 +34,26 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
+#class to perform form validation
+class inputForm(FlaskForm):
+    name = TextField(
+        'Name:',
+        validators=[validators.Required("Please enter your name"),
+                    validators.Length(
+                        min=4, max=80, message=
+                        "Name should have max 4 and min 80 characters.")])
+
+
+# flask login decorator
+def login_required(f):
+    @wraps(f)
+    def dec_func(*args, **kwargs):
+        if 'username' not in login_session:
+            return redirect('/login')
+        return f(*args, **kwargs)
+    return dec_func
+
+
 # get User ID by email
 def getUserID(email):
     try:
@@ -47,10 +71,10 @@ def getUserInfo(user_id):
 
 # create new user
 def createUser(login_session):
-    iname = login_session['username']
-    iemail = login_session['email']
-    ipicture = login_session['picture']
-    newUser = User(name=iname, email=iemail, picture=ipicture)
+    newUser = User(
+        name=login_session['username'],
+        email=login_session['email'],
+        picture=login_session['picture'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
@@ -225,23 +249,27 @@ def showMenu(sport_id):
 
 # Create a new Sport
 @app.route('/sport/new/', methods=['GET', 'POST'])
+@login_required
 def newSport():
-    if 'username' not in login_session:
-        return redirect('/login')
+    form = inputForm(request.form)
     if request.method == 'POST':
-        iname = request.form['name']
-        iuserid = login_session['user_id']
-        newSport = Sport(name=iname, user_id=iuserid)
-        session.add(newSport)
-        flash('New Sport %s Successfully Created' % newSport.name)
-        session.commit()
-        return redirect(url_for('showSports'))
+        if form.validate() == False:
+            return render_template('newSport.html', form=form)
+        else:
+            iname = request.form['name']
+            iuserid = login_session['user_id']
+            newSport = Sport(name=iname, user_id=iuserid)
+            session.add(newSport)
+            flash('New Sport %s Successfully Created' % newSport.name)
+            session.commit()
+            return redirect(url_for('showSports'))
     else:
-        return render_template('newSport.html')
+        return render_template('newSport.html', form=form)
 
 
 # Delete a sport
 @app.route('/sport/<int:sport_id>/delete/', methods=['GET', 'POST'])
+@login_required
 def deleteSport(sport_id):
     sport = session.query(Sport).filter_by(id=sport_id).one()
     if sport.user_id != login_session['user_id']:
@@ -270,30 +298,39 @@ def showDetail(sport_id, item_id):
 
 # Create new item for one sport
 @app.route('/sport/<int:sport_id>/menu/new', methods=['GET', 'POST'])
+@login_required
 def newItem(sport_id):
     sport = session.query(Sport).filter_by(id=sport_id).one()
     if sport.user_id != login_session['user_id']:
         return redirect(url_for('error'))
+    form = inputForm(request.form)
     if request.method == 'POST':
-        n = request.form['name']
-        d = request.form['description']
-        p = request.form['price']
-        c = request.form['category']
-        i = sport_id
-        u = sport.user_id
-        newItem = SportItem(
-            name=n, description=d, price=p, category=c, sport_id=i, user_id=u)
-        session.add(newItem)
-        session.commit()
-        flash('New %s Item Successfully Created' % (newItem.name))
-        return redirect(url_for('showMenu', sport_id=sport_id))
+        if form.validate() == False:
+            return render_template('newitem.html', form=form)
+        else:
+            n = request.form['name']
+            d = request.form['description']
+            p = request.form['price']
+            c = request.form['category']
+            i = sport_id
+            u = sport.user_id
+            newItem = SportItem(
+                name=n, description=d,
+                price=p, category=c,
+                sport_id=i, user_id=u)
+            session.add(newItem)
+            session.commit()
+            flash('New %s Item Successfully Created' % (newItem.name))
+            return redirect(url_for('showMenu', sport_id=sport_id))
     else:
-        return render_template('newitem.html', sport_id=sport_id)
+        return render_template(
+            'newitem.html', sport_id=sport_id, form=form)
 
 
 # Edit one item
 @app.route(
     '/sport/<int:sport_id>/menu/<int:item_id>/edit', methods=['GET', 'POST'])
+@login_required
 def editItem(sport_id, item_id):
     edI = session.query(SportItem).filter_by(id=item_id).one()
     sport = session.query(Sport).filter_by(id=sport_id).one()
@@ -320,6 +357,7 @@ def editItem(sport_id, item_id):
 # Delete one item
 @app.route(
     '/sport/<int:sport_id>/menu/<int:item_id>/delete', methods=['GET', 'POST'])
+@login_required
 def deleteItem(sport_id, item_id):
     deletedItem = session.query(SportItem).filter_by(id=item_id).one()
     sport = session.query(Sport).filter_by(id=sport_id).one()
@@ -343,6 +381,7 @@ def error():
 
 
 if __name__ == '__main__':
+    WTF_CSRF_ENABLED = True
     app.secret_key = 'super_secret_key'
     app.debug = True
     app.run(host='0.0.0.0', port=5000)
